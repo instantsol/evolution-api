@@ -6,6 +6,7 @@ import { dbserver } from './libs/db.connect';
   const client = dbserver.getClient();
   const connection = client.db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
   const collection = connection.collection('messages');
+  const contact_collection = connection.collection('contacts');
 
   await collection.createIndex({ 'key.remoteJid': -1, messageTimestamp: -1 });
 
@@ -32,6 +33,10 @@ import { dbserver } from './libs/db.connect';
       default_language: 'none',
     },
   );
+
+  await contact_collection.createIndex({ 'owner': 1 });
+  await contact_collection.createIndex({ 'lastMessage.messageTimestamp': 1 });
+  await contact_collection.createIndex({ 'lastMessage.messageTimestamp': -1 });
 
   process.exit(0);
 })().catch((error) => {

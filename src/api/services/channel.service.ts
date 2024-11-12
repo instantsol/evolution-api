@@ -1240,6 +1240,9 @@ export class ChannelStartupService {
         where: {
           owner: this.instance.name,
         },
+        sort: query?.sort,
+        limit: query?.limit,
+        skip: query?.skip,
       };
     }
     return await this.repository.contact.find(query);
