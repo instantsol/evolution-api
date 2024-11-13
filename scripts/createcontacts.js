@@ -22,10 +22,10 @@ async function main() {
 
         const documents = []
         // Documents to be inserted
-        for (let index = 0; index < 1000000; index++) {
+        for (let index = 0; index < 100; index++) {
           documents.push(
             { pushName: `test${index}`, id: `${index}@s.whatsapp.net`, profilePictureUrl: null ,
-              owner:"isacr00003_5527981375922", __v: 0, lastMessage: {...default_message, messageTimestamp: default_message.messageTimestamp+index}}
+              owner:"isacr00003_5527981375921", __v: 0, lastMessage: {...default_message, messageTimestamp: default_message.messageTimestamp+index}}
           )
           
         }
