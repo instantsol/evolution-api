@@ -10,7 +10,7 @@ const search = async (contact, messages) => {
 
 async function main() {
     // Connection URL
-    const url = 'mongodb://root:root@127.0.0.1:27017/?authSource=admin&readPreference=primary&ssl=false&directConnection=true';
+    const url = 'mongodb://root:P4ss_W0rd@10.40.0.17:27017/?authSource=admin&readPreference=primary&ssl=false&directConnection=true';
     const client = new MongoClient(url);
 
     // Database Name
@@ -29,7 +29,7 @@ async function main() {
 
         const contacts = Object.values(await collection.find().toArray())
         await Promise.all(contacts.map(async contact => {
-            const message = await messages.find({ 'key.remoteJid': contact.id }).sort({ messageTimestamp: -1 }).limit(1).toArray();
+            const message = await messages.find({ 'key.remoteJid': contact.id, owner: contact.owner }).sort({ messageTimestamp: -1 }).limit(1).toArray();
             if (message.length > 0) {
                 const selected_message = message[0]
                 await collection.updateOne({id: contact.id}, {$set: {lastMessage: {...selected_message, fromMe: selected_message.key.fromMe, sender:selected_message.pushName}}})
