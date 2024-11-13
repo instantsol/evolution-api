@@ -133,6 +133,30 @@ export class KwikRouter extends RouterBroker {
 
       return res.status(HttpStatus.OK).json(response);
     });
+
+    this.router.post(this.routerPath('updateContactCRM'), ...guards, async (req, res) => {
+      logger.verbose('request received in updateContactCRM');
+      logger.verbose('request body: ');
+      logger.verbose(req.body);
+
+      logger.verbose('request query: ');
+      logger.verbose(req.query);
+
+      const response = await this.dataValidate<InstanceDto>({
+        request: req,
+        schema: null,
+        ClassRef: InstanceDto,
+        execute: (instance) =>
+          kwikController.updateContactCRM(
+            instance,
+            req.body.contact_id,
+            req.body.kwik_contact_id,
+            req.body.kwik_contact_name,
+          ),
+      });
+
+      return res.status(HttpStatus.OK).json(response);
+    });
   }
 
   public readonly router = Router();

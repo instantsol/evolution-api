@@ -9,6 +9,8 @@ export class ContactRaw {
   profilePictureUrl?: string;
   owner: string;
   lastMessage?: object;
+  kwik_contact_id?: string;
+  kwik_contact_name?: string;
 }
 
 type ContactRawBoolean<T> = {
@@ -23,6 +25,8 @@ const contactSchema = new Schema<ContactRaw>({
   profilePictureUrl: { type: String, minlength: 1 },
   owner: { type: String, required: true, minlength: 1 },
   lastMessage: { type: Object },
+  kwik_contact_id: { type: String, required: false, minlength: 1 },
+  kwik_contact_name: { type: String, required: false, minlength: 1 },
 });
 
 export const ContactModel = dbserver?.model(ContactRaw.name, contactSchema, 'contacts');
