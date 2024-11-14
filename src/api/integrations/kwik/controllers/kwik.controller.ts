@@ -363,4 +363,15 @@ export class KwikController {
       return { status: 'error', message: 'contact not found' };
     }
   }
+
+  public async updateCRMInfo(kwik_contact_id: number, kwik_contact_name: string) {
+    const db = configService.get<Database>('DATABASE');
+    const connection = dbserver.getClient().db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
+    const contacts = connection.collection('contacts');
+    const response = await contacts.updateMany(
+      { kwik_contact_id: kwik_contact_id.toString() },
+      { $set: { kwik_contact_name } },
+    );
+    return response;
+  }
 }
