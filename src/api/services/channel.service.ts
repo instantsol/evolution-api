@@ -1231,7 +1231,9 @@ export class ChannelStartupService {
   public async fetchContacts(query: ContactQuery) {
     this.logger.verbose('Fetching contacts');
     if (query?.where) {
-      query.where.owner = this.instance.name;
+      if (!query.where?.owner) {
+        query.where.owner = this.instance.name;
+      }
       if (query.where?.id) {
         query.where.id = this.createJid(query.where.id);
       }

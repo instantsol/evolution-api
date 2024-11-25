@@ -343,4 +343,35 @@ export class KwikController {
 
     return { data };
   }
+  public async updateContactCRM(
+    { instanceName }: InstanceDto,
+    contact_id: string,
+    kwik_contact_id: number,
+    kwik_contact_name: string,
+  ) {
+    const db = configService.get<Database>('DATABASE');
+    const connection = dbserver.getClient().db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
+    const contacts = connection.collection('contacts');
+    const contact = await contacts.findOne({ owner: instanceName, id: contact_id });
+    if (contact) {
+      const updated = await contacts.updateOne(
+        { owner: instanceName, id: contact_id },
+        { $set: { kwik_contact_id, kwik_contact_name } },
+      );
+      return { status: 'ok', updated: updated.modifiedCount };
+    } else {
+      return { status: 'error', message: 'contact not found' };
+    }
+  }
+
+  public async updateCRMInfo(kwik_contact_id: number, kwik_contact_name: string) {
+    const db = configService.get<Database>('DATABASE');
+    const connection = dbserver.getClient().db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
+    const contacts = connection.collection('contacts');
+    const response = await contacts.updateMany(
+      { kwik_contact_id: kwik_contact_id.toString() },
+      { $set: { kwik_contact_name } },
+    );
+    return response;
+  }
 }
