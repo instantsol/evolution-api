@@ -106,7 +106,6 @@ export class InstanceRouter extends RouterBroker {
         const key = req.get('apikey');
         const fullFetch = req.query.fullFetch ? Number(req.query.fullFetch) : 0;
         const messageTimestamp = req.query.messageTimestamp ? req.query.messageTimestamp : -1;
-        const usage = req.query.usage ? Number(req.query.usage) : null;
 
         logger.verbose('request query: ');
         logger.verbose(req.query);
@@ -117,12 +116,12 @@ export class InstanceRouter extends RouterBroker {
           execute: (instance) => instanceController.fetchInstances(instance, key),
         });
 
-        if (fullFetch == 1) {
+        if (fullFetch > 0) {
           const usageData = await this.dataValidate<InstanceDto>({
             request: req,
             schema: null,
             ClassRef: InstanceDto,
-            execute: (instance) => kwikController.instanceInfo(instance, Number(messageTimestamp), usage),
+            execute: (instance) => kwikController.instanceInfo(instance, Number(messageTimestamp), fullFetch),
           });
           response.usageData = usageData;
         }
