@@ -202,7 +202,7 @@ export class KwikController {
 
     return { status: 'ok' };
   }
-  public async instanceInfo({ instanceName }: InstanceDto, messageTimestamp: number, usage?: number) {
+  public async instanceInfo({ instanceName }: InstanceDto, messageTimestamp: number, fullFetch?: number) {
     const db = configService.get<Database>('DATABASE');
     const connection = dbserver.getClient().db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
     const messages = connection.collection('messages');
@@ -223,15 +223,9 @@ export class KwikController {
     ];
     const chatCount = await messages.aggregate(pipeline).toArray();
 
-    if (usage) {
-      return {
-        chatCount: chatCount[0].rowCount,
-        totalSize: usage,
-        newVal: 0,
-      };
-    } else {
+    if (fullFetch === 2) {
       let ended = false;
-      const batchSize = 10000;
+      const batchSize = 500;
       let totalSize = 0;
       let offset = 0;
 
@@ -253,10 +247,20 @@ export class KwikController {
         }
       }
 
+      await connection.collection('settings').updateMany({ _id: instanceName }, { $set: { totalSize: totalSize } });
       return {
         chatCount: chatCount[0].rowCount,
         totalSize: totalSize,
         newVal: 1,
+      };
+    } else {
+      const settings = await connection.collection('settings').findOne({ _id: instanceName });
+      const totalSize = settings && settings.totalSize ? settings.totalSize : 0;
+
+      return {
+        chatCount: chatCount[0].rowCount,
+        totalSize: totalSize,
+        newVal: 0,
       };
     }
   }
