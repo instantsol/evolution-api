@@ -378,4 +378,15 @@ export class KwikController {
     );
     return response;
   }
+
+  public async deleteCRMInfo(kwik_contact_id: number) {
+    const db = configService.get<Database>('DATABASE');
+    const connection = dbserver.getClient().db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
+    const contacts = connection.collection('contacts');
+    const response = await contacts.updateMany(
+      { kwik_contact_id: kwik_contact_id.toString() },
+      { $unset: { kwik_contact_name: '', kwik_contact_id: '' } },
+    );
+    return response;
+  }
 }
