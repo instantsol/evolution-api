@@ -197,6 +197,25 @@ export class KwikRouter extends RouterBroker {
 
       return res.status(HttpStatus.OK).json(response);
     });
+
+    this.router.post(this.routerPath('flagRestrictedWords'), ...guards, async (req, res) => {
+      logger.verbose('request received in flagRestrictedWords');
+      logger.verbose('request body: ');
+      logger.verbose(req.body);
+
+      logger.verbose('request query: ');
+      logger.verbose(req.query);
+
+      const response = await this.dataValidate<InstanceDto>({
+        request: req,
+        schema: null,
+        ClassRef: InstanceDto,
+        execute: (instance) =>
+          kwikController.flagRestrictedWords(instance, req.body.message_id, req.body.word, req.body.group),
+      });
+
+      return res.status(HttpStatus.OK).json(response);
+    });
   }
   public readonly router = Router();
 }
