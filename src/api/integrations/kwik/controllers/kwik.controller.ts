@@ -411,4 +411,13 @@ export class KwikController {
       return { status: 'error', message: 'message not found' };
     }
   }
+
+  public async fetchContacts({ instanceName }: InstanceDto, ids: string[]) {
+    const db = configService.get<Database>('DATABASE');
+    const connection = dbserver.getClient().db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
+    const contacts = connection.collection('contacts');
+    const pipeline: Document[] = [{ $match: { owner: instanceName, id: { $in: ids } } }];
+    const data = await contacts.aggregate(pipeline).toArray();
+    return data;
+  }
 }
