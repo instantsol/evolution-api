@@ -125,17 +125,20 @@ export class MessageRepository extends Repository {
 
         return await this.messageModel.aggregate([
           { $match: { ...query.where } },
+          { $sort: (query?.sort as Record<string, 1 | -1>) ?? { messageTimestamp: -1 } },
+          { $skip: query?.skip ?? 0},
+          {$limit: (query?.limit ?? 0) + (query?.limit ?? 1)*5},
           {
             $group: {
               _id: '$key', // Replace with the unique field
               doc: { $first: '$$ROOT' },
-            },
+            }
           },
           { $replaceRoot: { newRoot: '$doc' } },
           { $sort: (query?.sort as Record<string, 1 | -1>) ?? { messageTimestamp: -1 } },
           { $skip: query?.skip ?? 0 },
           { $limit: query?.limit ?? 0 },
-        ]);
+        ] );
       }
 
       this.logger.verbose('finding messages in store');
