@@ -136,7 +136,7 @@ export class MessageRepository extends Repository {
           },
           { $replaceRoot: { newRoot: '$doc' } },
           { $sort: (query?.sort as Record<string, 1 | -1>) ?? { messageTimestamp: -1 } },
-          { $skip: query?.skip ?? 0 },
+          //{ $skip: query?.skip ?? 0 }, Fix messages not showing after some scrolls
           { $limit: query?.limit ?? 0 },
         ] );
       }
