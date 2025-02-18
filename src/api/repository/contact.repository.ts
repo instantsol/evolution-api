@@ -1,7 +1,7 @@
 import { opendirSync, readFileSync } from 'fs';
+import { SortOrder } from 'mongoose';
 import { join } from 'path';
 
-import { SortOrder } from 'mongoose';
 import { ConfigService, StoreConf } from '../../config/env.config';
 import { Logger } from '../../config/logger.config';
 import { IInsert, Repository } from '../abstract/abstract.repository';
@@ -139,7 +139,12 @@ export class ContactRepository extends Repository {
       this.logger.verbose('finding contacts');
       if (this.dbSettings.ENABLED) {
         this.logger.verbose('finding contacts in db');
-        return await this.contactModel.find({ ...query.where }).sort({ ...query?.sort }).limit( query?.limit ).skip( query?.skip ).select(query.select ?? {});
+        return await this.contactModel
+          .find({ ...query.where })
+          .sort({ ...query?.sort })
+          .limit(query?.limit)
+          .skip(query?.skip)
+          .select(query.select ?? {});
       }
 
       this.logger.verbose('finding contacts in store');
