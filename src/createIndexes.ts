@@ -34,7 +34,7 @@ import { dbserver } from './libs/db.connect';
     },
   );
 
-  await contact_collection.createIndex({ 'owner': 1 });
+  await contact_collection.createIndex({ owner: 1 });
   await contact_collection.createIndex({ 'lastMessage.messageTimestamp': 1 });
   await contact_collection.createIndex({ 'lastMessage.messageTimestamp': -1 });
 

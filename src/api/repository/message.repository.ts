@@ -1,4 +1,4 @@
-import { opendirSync, readFileSync, rmSync } from 'fs';
+import { mkdirSync, opendirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { SortOrder } from 'mongoose';
 import { join } from 'path';
 
@@ -15,12 +15,30 @@ export class MessageQuery {
   skip?: number;
 }
 
+function base64FileSize(base64String) {
+  // Remove the data URI prefix if present
+  const cleanedBase64 = base64String; //.split(',').pop();
+
+  // Calculate the padding characters
+  const padding = cleanedBase64.endsWith('==') ? 2 : cleanedBase64.endsWith('=') ? 1 : 0;
+
+  // Compute the size in bytes
+  const sizeInBytes = (cleanedBase64.length * 3) / 4 - padding;
+
+  return sizeInBytes;
+}
+
 export class MessageRepository extends Repository {
   constructor(private readonly messageModel: IMessageModel, private readonly configService: ConfigService) {
     super(configService);
   }
 
   private readonly logger = new Logger('MessageRepository');
+
+  private saveBase64ToFile(base64String: string, filePath: string): void {
+    const buffer = Buffer.from(base64String, 'base64');
+    writeFileSync(filePath, buffer);
+  }
 
   public buildQuery(query: MessageQuery): MessageQuery {
     for (const [o, p] of Object.entries(query?.where || {})) {
@@ -78,10 +96,31 @@ export class MessageRepository extends Repository {
           return cleanedObj;
         });
 
-        const insert = await this.messageModel.insertMany([...cleanedData]);
+        let insert = 0;
+        for (const message of cleanedData) {
+          if (
+            (message.message as { base64?: string })?.base64 &&
+            base64FileSize((message.message as { base64?: string }).base64) > 10 * 1024 * 1024 /* 10 MB */
+          ) {
+            const b64 = (message.message as { base64: string }).base64;
+            const p = instanceName.split('_');
+            const path = join('/mnt', 'export', p[0], 'scout', p[1], message.key.id);
+            // Create directory path if not exists
+            mkdirSync(join('/mnt', 'export', p[0], 'scout', p[1]), { recursive: true });
 
-        this.logger.verbose('messages saved to db: ' + insert.length + ' messages');
-        return { insertCount: insert.length };
+            this.saveBase64ToFile(b64, path);
+            delete (message.message as { base64?: string }).base64;
+            (message.message as { localPath?: string }).localPath = path;
+            const i = await this.messageModel.insertMany([message]);
+            insert = insert + i.length;
+          } else {
+            const i = await this.messageModel.insertMany([message]);
+            insert = insert + i.length;
+          }
+        }
+
+        this.logger.verbose('messages saved to db: ' + insert + ' messages');
+        return { insertCount: insert };
       }
 
       this.logger.verbose('saving messages to store');
@@ -126,19 +165,19 @@ export class MessageRepository extends Repository {
         return await this.messageModel.aggregate([
           { $match: { ...query.where } },
           { $sort: (query?.sort as Record<string, 1 | -1>) ?? { messageTimestamp: -1 } },
-          { $skip: query?.skip ?? 0},
-          {$limit: (query?.limit ?? 0) + (query?.limit ?? 1)*5},
+          { $skip: query?.skip ?? 0 },
+          { $limit: (query?.limit ?? 0) + (query?.limit ?? 1) * 5 },
           {
             $group: {
               _id: '$key', // Replace with the unique field
               doc: { $first: '$$ROOT' },
-            }
+            },
           },
           { $replaceRoot: { newRoot: '$doc' } },
           { $sort: (query?.sort as Record<string, 1 | -1>) ?? { messageTimestamp: -1 } },
           //{ $skip: query?.skip ?? 0 }, Fix messages not showing after some scrolls
           { $limit: query?.limit ?? 0 },
-        ] );
+        ]);
       }
 
       this.logger.verbose('finding messages in store');

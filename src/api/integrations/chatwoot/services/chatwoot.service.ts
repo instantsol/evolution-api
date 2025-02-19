@@ -741,7 +741,6 @@ export class ChatwootService {
       findByName = inbox.payload.find((inbox) => inbox.name === this.getClientCwConfig().name_inbox.split('-cwId-')[0]);
     }
 
-
     if (!findByName) {
       this.logger.warn('inbox not found');
       return null;
