@@ -217,6 +217,31 @@ export class KwikRouter extends RouterBroker {
       return res.status(HttpStatus.OK).json(response);
     });
 
+    this.router.post(this.routerPath('updateTranscription'), ...guards, async (req, res) => {
+      logger.verbose('request received in updateTranscription');
+      logger.verbose('request body: ');
+      logger.verbose(req.body);
+
+      logger.verbose('request query: ');
+      logger.verbose(req.query);
+
+      const response = await this.dataValidate<InstanceDto>({
+        request: req,
+        schema: null,
+        ClassRef: InstanceDto,
+        execute: (instance) =>
+          kwikController.updateTranscription(
+            instance,
+            req.body.message_id,
+            req.body.transcription_text,
+            req.body.transcription_status,
+            req.body.transcription_error,
+          ),
+      });
+
+      return res.status(HttpStatus.OK).json(response);
+    });
+
     this.router.post(this.routerPath('findContacts'), ...guards, async (req, res) => {
       logger.verbose('request received in kwik.findContacts');
       logger.verbose('request body: ');

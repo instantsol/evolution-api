@@ -412,6 +412,34 @@ export class KwikController {
     }
   }
 
+  public async updateTranscription(
+    { instanceName }: InstanceDto,
+    message_id: string,
+    text: string,
+    status: string,
+    error: string,
+  ) {
+    const db = configService.get<Database>('DATABASE');
+    const connection = dbserver.getClient().db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
+    const messages = connection.collection('messages');
+    const message = await messages.findOne({ owner: instanceName, 'key.id': message_id });
+    if (message) {
+      const updated = await messages.updateOne(
+        { owner: instanceName, 'key.id': message_id },
+        {
+          $set: {
+            transcription: text,
+            transcription_status: status,
+            transcription_error: error,
+          },
+        },
+      );
+      return { status: 'ok', updated: updated.modifiedCount };
+    } else {
+      return { status: 'error', message: 'message not found' };
+    }
+  }
+
   public async fetchContacts({ instanceName }: InstanceDto, ids: string[]) {
     const db = configService.get<Database>('DATABASE');
     const connection = dbserver.getClient().db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api');
