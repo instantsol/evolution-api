@@ -376,6 +376,11 @@ export class KwikController {
       { kwik_contact_id: kwik_contact_id.toString() },
       { $set: { kwik_contact_name } },
     );
+    const response2 = await contacts.updateMany({ kwik_contact_id: kwik_contact_id }, { $set: { kwik_contact_name } });
+
+    response.modifiedCount += response2.modifiedCount;
+    response.matchedCount += response2.matchedCount;
+    response.upsertedCount += response2.upsertedCount;
     return response;
   }
 
@@ -387,6 +392,14 @@ export class KwikController {
       { kwik_contact_id: kwik_contact_id.toString() },
       { $unset: { kwik_contact_name: '', kwik_contact_id: '' } },
     );
+    const response2 = await contacts.updateMany(
+      { kwik_contact_id: kwik_contact_id },
+      { $unset: { kwik_contact_name: '', kwik_contact_id: '' } },
+    );
+
+    response.modifiedCount += response2.modifiedCount;
+    response.matchedCount += response2.matchedCount;
+    response.upsertedCount += response2.upsertedCount;
     return response;
   }
 
