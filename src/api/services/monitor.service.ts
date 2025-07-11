@@ -106,6 +106,7 @@ export class WAMonitoringService {
     const instances: any[] = [];
 
     for await (const [key, value] of Object.entries(this.waInstances)) {
+      if (instanceName && key !== instanceName) continue
       if (value) {
         this.logger.verbose('get instance info: ' + key);
         let chatwoot: any;
