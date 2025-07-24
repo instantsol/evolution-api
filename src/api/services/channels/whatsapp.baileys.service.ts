@@ -2946,7 +2946,7 @@ export class BaileysStartupService extends ChannelStartupService {
 
       const msg = m?.message ? m : ((await this.getMessage(m.key, true)) as proto.IWebMessageInfo);
 
-      if (msg.ignoredMedia === true) {
+      if ((msg as any).ignoredMedia === true) {
         throw 'The message is not of the media type';
       }
 
