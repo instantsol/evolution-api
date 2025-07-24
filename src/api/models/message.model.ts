@@ -33,6 +33,7 @@ export class MessageRaw {
   chatwoot?: ChatwootMessage;
   contextInfo?: any;
   status?: wa.StatusMessage | any;
+  ignoredMedia?: boolean; // Indicates if the media type is ignored based on settings
 }
 
 type MessageRawBoolean<T> = {
@@ -58,6 +59,7 @@ const messageSchema = new Schema<MessageRaw>({
   source: { type: String, minlength: 3, enum: ['android', 'web', 'ios', 'unknown', 'desktop'] },
   messageTimestamp: { type: Number, required: true },
   owner: { type: String, required: true, minlength: 1 },
+  ignoredMedia: { type: Boolean, default: false }, // Indicates if the media type is ignored based on settings
   chatwoot: {
     messageId: { type: Number },
     inboxId: { type: Number },
@@ -85,6 +87,7 @@ export class MessageUpdateRaw {
   status?: wa.StatusMessage;
   owner: string;
   pollUpdates?: any;
+  ignoredMedia?: boolean; // Indicates if the media type is ignored based on settings
 }
 
 const messageUpdateSchema = new Schema<MessageUpdateRaw>({

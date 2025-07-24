@@ -402,6 +402,7 @@ export class InstanceController {
         read_status: read_status || false,
         sync_full_history: sync_full_history ?? false,
         ignore_list: [],
+        media_types: ['all'],
         initial_connection: null,
       };
 

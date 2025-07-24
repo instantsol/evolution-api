@@ -12,6 +12,7 @@ export class SettingsRaw {
   read_status?: boolean;
   sync_full_history?: boolean;
   ignore_list?: string[];
+  media_types?: string[];
   initial_connection?: number;
 }
 
@@ -25,6 +26,7 @@ const settingsSchema = new Schema<SettingsRaw>({
   read_status: { type: Boolean, required: true },
   sync_full_history: { type: Boolean, required: true },
   ignore_list: { type: [String], required: false },
+  media_types: { type: [String], required: false },
   initial_connection: { type: Number, required: false },
 });
 

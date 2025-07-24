@@ -98,7 +98,15 @@ export class MessageRepository extends Repository {
 
         let insert = 0;
         for (const message of cleanedData) {
-          if (
+          const ignoredMedia = message.ignoredMedia || false;
+          if (ignoredMedia === true) {
+            // this.logger.error(message.message);
+            delete (message.message as { base64?: string }).base64;
+            this.logger.error('DELETEME: Remove media before saving it.');
+            // this.logger.error(message.message);
+            const i = await this.messageModel.insertMany([message]);
+            insert = insert + i.length;
+          } else if (
             (message.message as { base64?: string })?.base64 &&
             base64FileSize((message.message as { base64?: string }).base64) > 10 * 1024 * 1024 /* 10 MB */
           ) {

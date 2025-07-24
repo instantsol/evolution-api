@@ -742,6 +742,68 @@ export class BaileysStartupService extends ChannelStartupService {
     }
   }
 
+  private shouldIgnoreMedia(settings: SettingsRaw, media: string): boolean {
+    /*
+      - ptvMessage
+      - imageMessage
+      - videoMessage
+      - documentMessage
+      - documentWithCaptionMessage
+      - audioMessage
+      - voiceMessage
+    */
+    this.logger.error(`Checking if media ${media} should be ignored`);
+    this.logger.verbose('Checking if media should be ignored');
+
+    if (!settings.media_types || settings.media_types.length === 0) {
+      this.logger.verbose('No media types defined, not ignoring media');
+      this.logger.error('No media types defined, not ignoring media');
+      return false;
+    }
+
+    if (settings.media_types.includes('all')) {
+      this.logger.error('Media type "all" defined, not ignoring media');
+      this.logger.verbose('Media type "all" defined, not ignoring media');
+      return false;
+    }
+
+    if (
+      media &&
+      [
+        'conversation',
+        'extendedTextMessage',
+        'templateMessage',
+        'contactMessage',
+        'locationMessage',
+        'pollCreationMessageV3',
+        'protocolMessage',
+        'REVOKE',
+        'editedMessage',
+        'reactionMessage',
+        'stickerMessage',
+      ].includes(media)
+    ) {
+      this.logger.error(`Media type ${media} is text, never ignore.`);
+      return false;
+    }
+
+    if (settings.media_types.includes('none')) {
+      this.logger.error('Media type "none" defined, ignore media');
+      this.logger.verbose('Media type "none" defined, ignore media');
+      return false;
+    }
+
+    if (media && !settings.media_types.includes(media)) {
+      this.logger.error(`Media type ${media} defined, ignoring media`);
+      this.logger.verbose(`Media type ${media} defined, ignoring media`);
+      return true;
+    }
+
+    this.logger.error('Not ignoring media');
+    this.logger.verbose('Not ignoring media');
+    return false;
+  }
+
   private readonly chatHandle = {
     'chats.upsert': async (chats: Chat[], database: Database) => {
       this.logger.verbose('Event received: chats.upsert');
@@ -999,6 +1061,11 @@ export class BaileysStartupService extends ChannelStartupService {
             return;
           }
 
+          const ignoredMedia = this.shouldIgnoreMedia(settings, getContentType(m.message));
+          if (ignoredMedia === true) {
+            delete (m.message as { base64?: string }).base64;
+          }
+
           const status: Record<number, wa.StatusMessage> = {
             0: 'ERROR',
             1: 'PENDING',
@@ -1017,6 +1084,7 @@ export class BaileysStartupService extends ChannelStartupService {
             messageTimestamp: m.messageTimestamp as number,
             owner: this.instance.name,
             status: m.status ? status[m.status] : null,
+            ignoredMedia: ignoredMedia,
           });
         }
 
@@ -1123,6 +1191,11 @@ export class BaileysStartupService extends ChannelStartupService {
             return;
           }
 
+          const ignoredMedia = this.shouldIgnoreMedia(settings, getContentType(received.message));
+          if (ignoredMedia === true) {
+            delete (received.message as { base64?: string }).base64;
+          }
+
           let messageRaw: MessageRaw;
 
           const isMedia =
@@ -1157,6 +1230,7 @@ export class BaileysStartupService extends ChannelStartupService {
               messageTimestamp: received.messageTimestamp as number,
               owner: this.instance.name,
               source: getDevice(received.key.id),
+              ignoredMedia: ignoredMedia,
             };
           } else {
             messageRaw = {
@@ -1168,6 +1242,7 @@ export class BaileysStartupService extends ChannelStartupService {
               messageTimestamp: received.messageTimestamp as number,
               owner: this.instance.name,
               source: getDevice(received.key.id),
+              ignoredMedia: ignoredMedia,
             };
           }
 
@@ -1389,12 +1464,15 @@ export class BaileysStartupService extends ChannelStartupService {
             return;
           }
 
+          // const ignoredMedia = this.shouldIgnoreMedia(settings, getContentType(key.message));
+
           const message: MessageUpdateRaw = {
             ...key,
             status: status[update.status],
             datetime: Date.now(),
             owner: this.instance.name,
             pollUpdates,
+            // ignoredMedia: ignoredMedia,
           };
 
           this.logger.verbose(message);
@@ -2867,6 +2945,10 @@ export class BaileysStartupService extends ChannelStartupService {
       const convertToMp4 = data?.convertToMp4 ?? false;
 
       const msg = m?.message ? m : ((await this.getMessage(m.key, true)) as proto.IWebMessageInfo);
+
+      if (msg.ignoredMedia === true) {
+        throw 'The message is not of the media type';
+      }
 
       if (!msg) {
         throw 'Message not found';
