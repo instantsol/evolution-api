@@ -183,6 +183,7 @@ CONFIG_SESSION_PHONE:
   # Name that will be displayed on smartphone connection
   CLIENT: "Evolution API"
   NAME: Chrome # Chrome | Firefox | Edge | Opera | Safari
+  VERSION: 2,3000,1025195125
 
 # Set qrcode display limit
 QRCODE:
