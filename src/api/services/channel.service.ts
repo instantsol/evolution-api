@@ -1133,22 +1133,25 @@ export class ChannelStartupService {
     const database = this.configService.get<Database>('DATABASE');
     if (cleanStore?.CLEANING_INTERVAL && !database.ENABLED) {
       this.logger.verbose('Cronjob to clean store enabled');
-      setInterval(() => {
-        try {
-          for (const [key, value] of Object.entries(cleanStore)) {
-            if (value === true) {
-              execSync(
-                `rm -rf ${join(this.storePath, key.toLowerCase().replace('_', '-'), this.instance.name)}/*.json`,
-              );
-              this.logger.verbose(
-                `Cleaned ${join(this.storePath, key.toLowerCase().replace('_', '-'), this.instance.name)}/*.json`,
-              );
+      setInterval(
+        () => {
+          try {
+            for (const [key, value] of Object.entries(cleanStore)) {
+              if (value === true) {
+                execSync(
+                  `rm -rf ${join(this.storePath, key.toLowerCase().replace('_', '-'), this.instance.name)}/*.json`,
+                );
+                this.logger.verbose(
+                  `Cleaned ${join(this.storePath, key.toLowerCase().replace('_', '-'), this.instance.name)}/*.json`,
+                );
+              }
             }
+          } catch (error) {
+            this.logger.error(error);
           }
-        } catch (error) {
-          this.logger.error(error);
-        }
-      }, (cleanStore?.CLEANING_INTERVAL ?? 3600) * 1000);
+        },
+        (cleanStore?.CLEANING_INTERVAL ?? 3600) * 1000,
+      );
     }
   }
 
@@ -1258,7 +1261,6 @@ export class ChannelStartupService {
         query.where.key.remoteJid = this.createJid(query.where.key.remoteJid);
       }
       query.where.owner = this.instance.name;
-      query.limit = 1;
     } else {
       query = {
         where: {

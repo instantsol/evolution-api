@@ -50,7 +50,7 @@ const messageSchema = new Schema<MessageRaw>({
     id: { type: String, required: true, minlength: 1 },
     remoteJid: { type: String, required: true, minlength: 1 },
     fromMe: { type: Boolean, required: true },
-    participant: { type: String, minlength: 1 },
+    participant: { type: String, minlength: 0 },
   },
   pushName: { type: String },
   participant: { type: String },
