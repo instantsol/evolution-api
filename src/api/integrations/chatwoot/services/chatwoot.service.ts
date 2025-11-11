@@ -1393,7 +1393,7 @@ export class ChatwootService {
               },
             };
 
-            let messageSent: MessageRaw | proto.WebMessageInfo;
+            let messageSent: MessageRaw | proto.IWebMessageInfo;
             try {
               messageSent = await waInstance?.textMessage(data, true);
               if (!messageSent) {
