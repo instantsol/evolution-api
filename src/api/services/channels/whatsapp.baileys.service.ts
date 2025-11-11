@@ -21,12 +21,11 @@ import makeWASocket, {
   isJidBroadcast,
   isJidGroup,
   isJidNewsletter,
-  isJidUser,
+  isLidUser,
   makeCacheableSignalKeyStore,
   MessageUpsertType,
   MiscMessageGenerationOptions,
   ParticipantAction,
-  PHONENUMBER_MCC,
   prepareWAMessageMedia,
   proto,
   useMultiFileAuthState,
@@ -38,6 +37,7 @@ import makeWASocket, {
   WAPresence,
   WASocket,
 } from 'baileys';
+import PHONENUMBER_MCC from 'baileys';
 import { Label } from 'baileys/lib/Types/Label';
 import { LabelAssociation } from 'baileys/lib/Types/LabelAssociation';
 import { exec } from 'child_process';
@@ -2816,7 +2816,7 @@ export class BaileysStartupService extends ChannelStartupService {
     try {
       const keys: proto.IMessageKey[] = [];
       data.read_messages.forEach((read) => {
-        if (isJidGroup(read.remoteJid) || isJidUser(read.remoteJid)) {
+        if (isJidGroup(read.remoteJid) || isLidUser(read.remoteJid)) {
           keys.push({
             remoteJid: read.remoteJid,
             fromMe: read.fromMe,

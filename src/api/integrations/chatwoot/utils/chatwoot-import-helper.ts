@@ -205,7 +205,7 @@ class ChatwootImport {
                 return;
               }
 
-              const contentMessage = this.getContentMessage(chatwootService, message);
+              const contentMessage = this.getContentMessage(chatwootService, message as IWebMessageInfo);
               if (!contentMessage) {
                 return;
               }
