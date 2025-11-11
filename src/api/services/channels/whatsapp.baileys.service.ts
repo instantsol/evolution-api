@@ -676,7 +676,8 @@ export class BaileysStartupService extends ChannelStartupService {
   }
 
   private async sendMobileCode() {
-    const { registration } = this.client.authState.creds || null;
+    // const { registration } = this.client.authState.creds || null;
+    const registration = (this.client.authState.creds as any)?.registration || {};
 
     let phoneNumber = registration.phoneNumber || this.phoneNumber;
 
