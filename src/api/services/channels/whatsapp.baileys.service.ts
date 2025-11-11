@@ -3073,7 +3073,8 @@ export class BaileysStartupService extends ChannelStartupService {
       await this.client.updateLastSeenPrivacy(settings.privacySettings.last);
       this.logger.verbose('Last seen privacy updated');
 
-      await this.client.updateGroupsAddPrivacy(settings.privacySettings.groupadd);
+      const groupAddValue = settings.privacySettings.groupadd as 'all' | 'contacts' | 'contact_blacklist';
+      await this.client.updateGroupsAddPrivacy(groupAddValue);
       this.logger.verbose('Groups add privacy updated');
 
       this.reloadConnection();
