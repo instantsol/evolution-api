@@ -675,6 +675,55 @@ export class BaileysStartupService extends ChannelStartupService {
     }
   }
 
+  // private async sendMobileCode() {
+  //   // const { registration } = this.client.authState.creds || null;
+  //   const registration = (this.client.authState.creds as any)?.registration || {};
+
+  //   let phoneNumber = registration.phoneNumber || this.phoneNumber;
+
+  //   if (!phoneNumber.startsWith('+')) {
+  //     phoneNumber = '+' + phoneNumber;
+  //   }
+
+  //   if (!phoneNumber) {
+  //     this.logger.error('Phone number not found');
+  //     return;
+  //   }
+
+  //   const parsedPhoneNumber = parsePhoneNumber(phoneNumber);
+
+  //   if (!parsedPhoneNumber?.isValid()) {
+  //     this.logger.error('Phone number invalid');
+  //     return;
+  //   }
+
+  //   registration.phoneNumber = parsedPhoneNumber.format('E.164');
+  //   registration.phoneNumberCountryCode = parsedPhoneNumber.countryCallingCode;
+  //   registration.phoneNumberNationalNumber = parsedPhoneNumber.nationalNumber;
+
+  //   const mcc = await PHONENUMBER_MCC[parsedPhoneNumber.countryCallingCode];
+  //   if (!mcc) {
+  //     this.logger.error('MCC not found');
+  //     return;
+  //   }
+
+  //   registration.phoneNumberMobileCountryCode = mcc;
+  //   registration.method = 'sms';
+
+  //   try {
+  //     const response = await this.client.requestRegistrationCode(registration);
+
+  //     if (['ok', 'sent'].includes(response?.status)) {
+  //       this.logger.verbose('Registration code sent successfully');
+
+  //       return response;
+  //     }
+  //   } catch (error) {
+  //     this.logger.error(error);
+  //   }
+  // }
+
+  // ...existing code...
   private async sendMobileCode() {
     // const { registration } = this.client.authState.creds || null;
     const registration = (this.client.authState.creds as any)?.registration || {};
@@ -711,28 +760,55 @@ export class BaileysStartupService extends ChannelStartupService {
     registration.method = 'sms';
 
     try {
-      const response = await this.client.requestRegistrationCode(registration);
+      // Store registration info in credentials and save
+      (this.client.authState.creds as any).registration = registration;
+      await this.instance.authState.saveCreds();
 
-      if (['ok', 'sent'].includes(response?.status)) {
-        this.logger.verbose('Registration code sent successfully');
-
-        return response;
-      }
+      this.logger.verbose('Registration data saved, code will be sent automatically');
+      return { status: 'pending', message: 'Registration initiated, waiting for code' };
     } catch (error) {
       this.logger.error(error);
+      throw new InternalServerErrorException('Error initiating registration: ' + error.toString());
     }
   }
 
+  // public async receiveMobileCode(code: string) {
+  //   await this.client
+  //     .register(code.replace(/["']/g, '').trim().toLowerCase())
+  //     .then(async () => {
+  //       this.logger.verbose('Registration code received successfully');
+  //     })
+  //     .catch((error) => {
+  //       this.logger.error(error);
+  //     });
+  // }
+  // ...existing code...
   public async receiveMobileCode(code: string) {
-    await this.client
-      .register(code.replace(/["']/g, '').trim().toLowerCase())
-      .then(async () => {
-        this.logger.verbose('Registration code received successfully');
-      })
-      .catch((error) => {
-        this.logger.error(error);
-      });
+    try {
+      const creds = this.client.authState.creds;
+      const registration = (creds as any)?.registration || {};
+
+      if (!registration.phoneNumber) {
+        throw new Error('Registration not initiated. Please start the registration process first.');
+      }
+
+      // Update the registration with the received code
+      registration.code = code.replace(/["']/g, '').trim();
+
+      // Save the updated credentials
+      await this.instance.authState.saveCreds();
+
+      this.logger.verbose('Registration code received successfully');
+
+      return { success: true, message: 'Registration code received and processed' };
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException('Error processing registration code: ' + error.toString());
+    }
   }
+  // ...existing code...
+
+  // ...existing code...
 
   public async reloadConnection(): Promise<WASocket> {
     try {
@@ -1643,7 +1719,16 @@ export class BaileysStartupService extends ChannelStartupService {
         if (events['messaging-history.set']) {
           this.logger.verbose('Listening event: messaging-history.set');
           const payload = events['messaging-history.set'];
-          this.messageHandle['messaging-history.set'](payload, database);
+
+          // Transform payload to match expected type
+          const transformedPayload = {
+            chats: payload.chats,
+            contacts: payload.contacts,
+            messages: payload.messages as proto.IWebMessageInfo[],
+            isLatest: payload.isLatest ?? false,
+          };
+
+          this.messageHandle['messaging-history.set'](transformedPayload, database);
         }
 
         if (events['messages.upsert']) {
@@ -1685,7 +1770,14 @@ export class BaileysStartupService extends ChannelStartupService {
           if (events['group-participants.update']) {
             this.logger.verbose('Listening event: group-participants.update');
             const payload = events['group-participants.update'];
-            this.groupHandler['group-participants.update'](payload);
+            // Transform payload to match expected type
+            const transformedPayload = {
+              id: payload.id,
+              participants: payload.participants.map((p: any) => (typeof p === 'string' ? p : p.id)),
+              action: payload.action,
+            };
+
+            this.groupHandler['group-participants.update'](transformedPayload);
           }
         }
 
