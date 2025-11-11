@@ -1938,8 +1938,8 @@ export class BaileysStartupService extends ChannelStartupService {
 
         const msg = m?.message ? m : ((await this.getMessage(m.key, true)) as proto.IWebMessageInfo);
 
-        if (msg) {
-          quoted = msg;
+        if (msg && msg.key) {
+          quoted = msg as WAMessage;
           this.logger.verbose('Quoted message');
         }
       }
