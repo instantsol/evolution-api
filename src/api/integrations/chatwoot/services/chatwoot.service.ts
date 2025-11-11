@@ -12,7 +12,7 @@ import axios from 'axios';
 import { proto } from 'baileys';
 import FormData from 'form-data';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
-import Jimp from 'jimp';
+import { Jimp } from 'jimp';
 import mimeTypes from 'mime-types';
 import path from 'path';
 
@@ -1393,7 +1393,7 @@ export class ChatwootService {
               },
             };
 
-            let messageSent: MessageRaw | proto.IWebMessageInfo;
+            let messageSent: MessageRaw | proto.WebMessageInfo | any;
             try {
               messageSent = await waInstance?.textMessage(data, true);
               if (!messageSent) {
@@ -2028,13 +2028,13 @@ export class ChatwootService {
           const random = Math.random().toString(36).substring(7);
           const nameFile = `${random}.${mimeTypes.extension(mimeType)}`;
           const fileData = Buffer.from(imgBuffer.data, 'binary');
-          const fileName = `${path.join(waInstance?.storePath, 'temp', `${nameFile}`)}`;
+          const fileName = `${path.join(waInstance?.storePath, 'temp', `${nameFile}`)}` as `${string}.${string}`;
 
           this.logger.verbose('temp file name: ' + nameFile);
           this.logger.verbose('create temp file');
           await Jimp.read(fileData)
             .then(async (img) => {
-              await img.cover(320, 180).writeAsync(fileName);
+              await img.cover({ w: 320, h: 180 }).write(fileName);
             })
             .catch((err) => {
               this.logger.error(`image is not write: ${err}`);
