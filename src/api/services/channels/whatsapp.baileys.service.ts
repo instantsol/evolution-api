@@ -1210,6 +1210,35 @@ export class BaileysStartupService extends ChannelStartupService {
       try {
         this.logger.verbose('Event received: messages.upsert');
         for (const received of messages) {
+         
+          //FIX ATUAL
+          received.key.remoteJid =
+            received.key.remoteJidAlt && !received.key.remoteJidAlt.includes('@lid')
+              ? received.key.remoteJidAlt
+              : received.key.remoteJid;
+
+          if (received.key.remoteJidAlt && received.key.remoteJidAlt.includes('@lid') && received.key.remoteJid !== received.key.remoteJidAlt){
+            // Se o alt tem o @lid, deve pegar todas as mensagens que caíram no @lid e transferir para o @lid
+            const foundContact = (await this.repository.contact.find({where: {id: received.key.remoteJidAlt, owner:this.instance.name }})).toString()
+            if (foundContact){
+              //waMonitor.waInstances[this.instance.name]
+            const db = this.configService.get<Database>('DATABASE');
+            const messageCollection = dbserver
+              .getClient()
+              .db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api')
+              .collection('messages');
+              messageCollection.updateMany(
+                { "key.remoteJid": received.key.remoteJidAlt, owner: this.instance.name },
+                {$set: { "key.remoteJid": received.key.remoteJid }}
+              )
+              const contactCollection = dbserver
+              .getClient()
+              .db(db.CONNECTION.DB_PREFIX_NAME + '-whatsapp-api')
+              .collection('contacts');
+              contactCollection.deleteOne({id: received.key.remoteJidAlt, owner:this.instance.name })
+            }
+          }
+           //FIX ATUAL
           if (
             this.localChatwoot.enabled &&
             (received.message?.protocolMessage?.editedMessage || received.message?.editedMessage?.message)
