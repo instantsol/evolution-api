@@ -1212,10 +1212,16 @@ export class BaileysStartupService extends ChannelStartupService {
         for (const received of messages) {
          
           //FIX ATUAL
-          received.key.remoteJid =
+          const newJid =
             received.key.remoteJidAlt && !received.key.remoteJidAlt.includes('@lid')
               ? received.key.remoteJidAlt
               : received.key.remoteJid;
+          const newAltJid = received.key.remoteJid && received.key.remoteJid.includes('@lid')
+              ? received.key.remoteJid
+              : received.key.remoteJidAlt;
+
+          received.key.remoteJid = newJid
+          received.key.remoteJidAlt = newAltJid
 
           if (received.key.remoteJidAlt && received.key.remoteJidAlt.includes('@lid') && received.key.remoteJid !== received.key.remoteJidAlt){
             // Se o alt tem o @lid, deve pegar todas as mensagens que caíram no @lid e transferir para o @lid
